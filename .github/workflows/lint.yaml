@@ -17,5 +17,6 @@ jobs:
           go mod verify
       - name: Lint
         run: |
+          go mod tidy -diff
           go vet ./...
           go tool staticcheck ./...
