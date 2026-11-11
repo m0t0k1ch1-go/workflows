@@ -4,17 +4,14 @@ m0t0k1ch1-go 配下の Go リポジトリで共有する、再利用可能なワ
 
 ## ワークフロー
 
-- `.github/workflows/go-lint.yaml`：`make deps` で依存をインストールし、`make lint` を実行する。
-- `.github/workflows/go-test.yaml`：`make deps` で依存をインストールし、`make test` を実行して、カバレッジを Codecov にアップロードする。
+- `.github/workflows/lint.yaml`：依存をダウンロードして検証し（`go mod download`、`go mod verify`）、`go vet` と staticcheck を実行する。
+- `.github/workflows/test.yaml`：依存をダウンロードして検証し、`go test` を `-race` を付けて実行して、カバレッジを Codecov にアップロードする。
 
 ## 呼び出し側の要件
 
-- リポジトリのルートに `go.mod` を置く。Go のバージョンは `go.mod` から読み込む。
-- `Makefile` に、以下のターゲットを定義する。
-  - `deps`：依存をインストールする。
-  - `lint`：静的解析を実行する。
-  - `test`：テストを実行する。`go test` には `$(APP_TEST_FLAGS)` を渡す。`go-test.yaml` は、`APP_TEST_FLAGS` でカバレッジの出力先（`coverage.txt`）などを指定する。
-- `go-test.yaml` を呼び出すジョブに、`id-token: write` の権限を与える。Codecov へのアップロードに OIDC を使うためである。呼び出されたワークフローは、呼び出し側が与えた権限を超える権限を持てない。
+- リポジトリのルートに `go.mod` と `go.sum` を置く。Go のバージョンは `go.mod` から読み込む。
+- staticcheck を `go.mod` に tool として登録する（`go get -tool honnef.co/go/tools/cmd/staticcheck`）。`lint.yaml` は、staticcheck を `go tool staticcheck` で実行する。
+- `test.yaml` を呼び出すジョブに、`id-token: write` の権限を与える。Codecov へのアップロードに OIDC を使うためである。呼び出されたワークフローは、呼び出し側が与えた権限を超える権限を持てない。
 
 ## 使い方
 
@@ -30,7 +27,7 @@ on:
       - "**"
 jobs:
   lint:
-    uses: m0t0k1ch1-go/workflows/.github/workflows/go-lint.yaml@main
+    uses: m0t0k1ch1-go/workflows/.github/workflows/lint.yaml@main
 ```
 
 `test.yaml`：
@@ -45,7 +42,7 @@ jobs:
   test:
     permissions:
       id-token: write
-    uses: m0t0k1ch1-go/workflows/.github/workflows/go-test.yaml@main
+    uses: m0t0k1ch1-go/workflows/.github/workflows/test.yaml@main
 ```
 
 参照先は `main` ブランチとする。そのため、本リポジトリの `main` ブランチへの変更は、すべての呼び出し側リポジトリの CI に即座に反映される。本リポジトリのワークフローを変更するときは、マージする前に、呼び出し側リポジトリの作業ブランチで参照先を本リポジトリの作業ブランチに変え、CI が成功することを確認する。

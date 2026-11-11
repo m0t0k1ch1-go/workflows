@@ -1,4 +1,4 @@
-name: go-lint
+name: lint
 on:
   workflow_call:
 jobs:
@@ -12,6 +12,10 @@ jobs:
         with:
           go-version-file: go.mod
       - name: Install dependencies
-        run: make deps
+        run: |
+          go mod download
+          go mod verify
       - name: Lint
-        run: make lint
+        run: |
+          go vet ./...
+          go tool staticcheck ./...
