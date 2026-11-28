@@ -9,14 +9,10 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7
-      - name: Set up Go
-        uses: actions/setup-go@v7
+      - name: Set up Go environment
+        uses: m0t0k1ch1-go/workflows/.github/actions/setup-go-env@main
         with:
-          go-version-file: go.mod
-      - name: Install dependencies
-        run: |
-          go mod download
-          go mod verify
+          cache-key-prefix: test
       - name: Test
         run: go test -race -coverprofile=coverage.txt -covermode=atomic ./...
       - name: Upload coverage profile to Codecov

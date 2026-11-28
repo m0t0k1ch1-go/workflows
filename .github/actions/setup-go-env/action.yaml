@@ -1,0 +1,29 @@
+name: setup-go-env
+description: Set up the Go environment.
+inputs:
+  cache-key-prefix:
+    description: Prefix for the cache key.
+    required: true
+runs:
+  using: composite
+  steps:
+    - name: Set up Go
+      id: setup-go
+      uses: actions/setup-go@v7
+      with:
+        go-version-file: go.mod
+        cache: false
+    - name: Set up Go cache
+      uses: actions/cache@v6
+      with:
+        path: |-
+          ${{ steps.setup-go.outputs.GOCACHE }}
+          ${{ steps.setup-go.outputs.GOMODCACHE }}
+          ~/.cache/staticcheck
+        key: go-${{ inputs.cache-key-prefix }}-${{ runner.os }}-${{ runner.arch }}-${{ steps.setup-go.outputs.go-version }}-${{ hashFiles('go.sum') }}
+        restore-keys: go-${{ inputs.cache-key-prefix }}-${{ runner.os }}-${{ runner.arch }}-${{ steps.setup-go.outputs.go-version }}-
+    - name: Install dependencies
+      shell: bash
+      run: |-
+        go mod download
+        go mod verify
